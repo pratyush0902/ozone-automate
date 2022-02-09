@@ -88,7 +88,7 @@ def deleteKey(vol, bucket, key_name):  # done
 
 
 # Delete all the keys from the bucket
-def deleteAllKeys(vol, bucket, key_list):
+def deleteAllKeys(vol, bucket, key_list):  # done
     for key in key_list:
         deleteKey(vol, bucket, key)
 
