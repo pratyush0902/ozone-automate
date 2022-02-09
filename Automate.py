@@ -4,7 +4,7 @@ import paramiko
 
 # import re
 
-
+# SSH Connection to Ozone
 def sshConnect():  # done
     private_key = paramiko.RSAKey.from_private_key_file("myKeys", password="company")
     client = paramiko.SSHClient()
@@ -15,6 +15,7 @@ def sshConnect():  # done
     return client
 
 
+# List all the volumes present
 def showVolumes():  # done
     command_formation = "ozone sh volume list | grep name"
     stdin, stdout, stderr = c.exec_command(command_formation)
@@ -26,6 +27,7 @@ def showVolumes():  # done
     print(volume_list)
 
 
+# List all the buckets inside a particular volume
 def showBuckets(vol):  # done
     command_formation = f"ozone sh bucket list {vol} | grep -e name"
     stdin, stdout, stderr = c.exec_command(command_formation)
@@ -37,6 +39,7 @@ def showBuckets(vol):  # done
     print(bucket_list)
 
 
+# List all the keys present in the bucket
 def showKeys(vol, bucket):  # done
     command_formation = f"ozone sh key list {vol}/{bucket} | grep name"
     stdin, stdout, stderr = c.exec_command(command_formation)
@@ -49,36 +52,42 @@ def showKeys(vol, bucket):  # done
     return key_list
 
 
+# Create a new volume
 def createVolume(vol):  # done
     command_formation = f"ozone sh volume create {vol}"
     c.exec_command(command_formation)
     time.sleep(5)
 
 
+# Create a new bucket inside a volume
 def createBucket(vol, bucket):  # done
     command_formation = f"ozone sh bucket create {vol}/{bucket}/"
     c.exec_command(command_formation)
     time.sleep(5)
 
 
+# Create a new key inside a bucket
 def createKey(vol, bucket, key):  # done
     command_formation = f"ozone fs -touch o3fs://{bucket}.{vol}.ozone1/{key}"
     c.exec_command(command_formation)
     time.sleep(5)
 
 
-def createManyKeys(vol, bucket, n):
+# Create n keys at a time inside a bucket
+def createManyKeys(vol, bucket, n):  # done
     for i in range(1, n + 1):
         key_name = f"key{i}"
         createKey(vol, bucket, key_name)
 
 
-def deleteKey(vol, bucket, key_name):
+# Delete a key from the bucket
+def deleteKey(vol, bucket, key_name):  # done
     command_formation = f"ozone sh key delete {vol}/{bucket}/{key_name}"
     c.exec_command(command_formation)
     time.sleep(5)
 
 
+# Delete all the keys from the bucket
 def deleteAllKeys(vol, bucket, key_list):
     for key in key_list:
         deleteKey(vol, bucket, key)
