@@ -15,6 +15,12 @@ def sshConnect():  # done
     return client
 
 
+# Executing the exec_command
+def execute(command_formation):
+    c.exec_command(command_formation)
+    time.sleep(5)
+
+
 # List all the volumes present
 def showVolumes():  # done
     command_formation = "ozone sh volume list | grep name"
@@ -55,22 +61,19 @@ def showKeys(vol, bucket):  # done
 # Create a new volume
 def createVolume(vol):  # done
     command_formation = f"ozone sh volume create {vol}"
-    c.exec_command(command_formation)
-    time.sleep(5)
+    execute(command_formation)
 
 
 # Create a new bucket inside a volume
 def createBucket(vol, bucket):  # done
     command_formation = f"ozone sh bucket create {vol}/{bucket}/"
-    c.exec_command(command_formation)
-    time.sleep(5)
+    execute(command_formation)
 
 
 # Create a new key inside a bucket
 def createKey(vol, bucket, key):  # done
     command_formation = f"ozone fs -touch o3fs://{bucket}.{vol}.ozone1/{key}"
-    c.exec_command(command_formation)
-    time.sleep(5)
+    execute(command_formation)
 
 
 # Create n keys at a time inside a bucket
@@ -83,8 +86,7 @@ def createManyKeys(vol, bucket, n):  # done
 # Delete a key from the bucket
 def deleteKey(vol, bucket, key_name):  # done
     command_formation = f"ozone sh key delete {vol}/{bucket}/{key_name}"
-    c.exec_command(command_formation)
-    time.sleep(5)
+    execute(command_formation)
 
 
 # Delete all the keys from the bucket
@@ -99,9 +101,9 @@ c = sshConnect()
 def main():
     user_response = 0
     while user_response != 9:
-        print("\n\nWhat do you wanna do? \n"
-              "1.Create a volume?\n"
-              "2.Create a bucket inside a particular volume?\n"
+        print("\n\nWhat do you wanna do. \n"
+              "1.Create a volume.\n"
+              "2.Create a bucket inside a particular volume.\n"
               "3.Create key inside a Bucket.\n"
               "4.List all volumes\n"
               "5.List all buckets inside a particular volume\n"
