@@ -16,7 +16,7 @@ def sshConnect():  # done
 
 
 # Executing the exec_command
-def execute(command_formation):
+def execute(command_formation):  # done
     c.exec_command(command_formation)
     time.sleep(5)
 
@@ -83,6 +83,18 @@ def createManyKeys(vol, bucket, n):  # done
         createKey(vol, bucket, key_name)
 
 
+# Delete a particular volume
+def deleteVolume(vol):  # done
+    command_formation = f"ozone sh volume delete {vol}"
+    execute(command_formation)
+
+
+# Delete a particular bucket from a volume
+def deleteBucket(vol, bucket):  # done
+    command_formation = f"ozone sh bucket delete {vol}/{bucket}"
+    execute(command_formation)
+
+
 # Delete a key from the bucket
 def deleteKey(vol, bucket, key_name):  # done
     command_formation = f"ozone sh key delete {vol}/{bucket}/{key_name}"
@@ -100,7 +112,7 @@ c = sshConnect()
 
 def main():
     user_response = 0
-    while user_response != 9:
+    while user_response != 12:
         print("\n\nWhat do you wanna do. \n"
               "1.Create a volume.\n"
               "2.Create a bucket inside a particular volume.\n"
@@ -110,9 +122,12 @@ def main():
               "6.List all the keys inside a bucket\n"
               "7.Uploading many keys at a time(say n) into a bucket\n"
               "8.Deleting all the keys present in the bucket\n"
-              "9:Exit\n"
+              "9.Delete a volume\n"
+              "10.Delete a bucket from a volume\n"
+              "11.Delete a key from a bucket\n"
+              "12.Exit\n"
               )
-        user_response = int(input("Enter your response[1-9]\n"))
+        user_response = int(input("Enter your response[1-12]\n"))
         match user_response:
             case 1:
                 volume_name = input("Enter the name of the volume: ")
@@ -164,6 +179,30 @@ def main():
                 print("Deleting all keys.. Please wait")
                 deleteAllKeys(vol_name, bucket_name, keys)
                 print("All keys deleted from the specified bucket")
+            case 9:
+                showVolumes()
+                vol_name = input("Enter the Volume to delete")
+                deleteVolume(vol_name)
+                print("Volume deleted successfully!")
+                showVolumes()
+            case 10:
+                showVolumes()
+                vol_name = input("Choose the volume: ")
+                showBuckets(vol_name)
+                bucket_name = input("Enter the bucket to delete: ")
+                deleteBucket(vol_name, bucket_name)
+                print("Bucket deleted successfully!")
+                showBuckets(vol_name)
+            case 11:
+                showVolumes()
+                vol_name = input("Choose the volume: ")
+                showBuckets(vol_name)
+                bucket_name = input("Choose the bucket: ")
+                showKeys(vol_name, bucket_name)
+                key_name = input("Enter the key name to delete: ")
+                deleteKey(vol_name, bucket_name, key_name)
+                print("Key deleted successfully!")
+                showKeys(vol_name, bucket_name)
 
 
 if __name__ == "__main__":
