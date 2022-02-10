@@ -17,8 +17,9 @@ def sshConnect():  # done
 
 # Executing the exec_command
 def execute(command_formation):  # done
-    c.exec_command(command_formation)
+    stdin, stdout, stderr = c.exec_command(command_formation)
     time.sleep(5)
+    return stdin, stdout, stderr
 
 
 # List all the volumes present
@@ -86,7 +87,8 @@ def createManyKeys(vol, bucket, n):  # done
 # Delete a particular volume
 def deleteVolume(vol):  # done
     command_formation = f"ozone sh volume delete {vol}"
-    execute(command_formation)
+    err = execute(command_formation)[2]
+    return err.read().decode().strip()
 
 
 # Delete a particular bucket from a volume
@@ -181,10 +183,14 @@ def main():
                 print("All keys deleted from the specified bucket")
             case 9:
                 showVolumes()
-                vol_name = input("Enter the Volume to delete")
-                deleteVolume(vol_name)
-                print("Volume deleted successfully!")
-                showVolumes()
+                vol_name = input("Enter the Volume to delete: ")
+                err = deleteVolume(vol_name)
+                if err != "":
+                    print(
+                        "Volume cant be deleted, Please check if its empty or not. \nOnly empty volumes can be deleted.")
+                else:
+                    print("Volume deleted successfully!")
+                    showVolumes()
             case 10:
                 showVolumes()
                 vol_name = input("Choose the volume: ")
