@@ -23,7 +23,8 @@ def execute(command_formation):  # done
     return stdin, stdout, stderr
 
 
-def formatter(stdout):
+# Returning the output in the format desired
+def formatter(stdout):  # done
     out = stdout.read().decode().strip()
     res = json.loads(out)
     result = []
@@ -165,10 +166,10 @@ def main():
                 bucket_name = input("Enter the bucket name: ")
                 showKeys(vol_name, bucket_name)
             case 7:
-                num = int(input("Enter the number of keys(N) you want to add"))
+                num = int(input("Enter the number of keys(N) you want to add: "))
                 key_names = []
                 for i in range(num):
-                    key_name = input(f"Enter the name of {i+1} key")
+                    key_name = input(f"Enter the name of {i + 1} key: ")
                     key_names.append(key_name)
                 showVolumes()
                 vol_name = input("Choose the volume: ")
