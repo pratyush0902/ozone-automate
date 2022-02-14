@@ -48,9 +48,14 @@ def showBuckets(vol):  # done
     command_formation = f"ozone sh bucket list {vol}"
     stdin, stdout, stderr = c.exec_command(command_formation)
     time.sleep(5)
+    error_string = stderr.read().decode().strip()
+    if error_string:
+        return error_string
+
     print(f"Available buckets inside volume = {vol}: ")
     bucket_list = formatter(stdout)
     print(bucket_list)
+    return ""
 
 
 # List all the keys present in the bucket
@@ -58,22 +63,27 @@ def showKeys(vol, bucket):  # done
     command_formation = f"ozone sh key list {vol}/{bucket}"
     stdin, stdout, stderr = c.exec_command(command_formation)
     time.sleep(5)
+    error_string = stderr.read().decode().strip()
+    if error_string:
+        return [], error_string
     print(f"Available keys inside bucket {bucket} of volume {vol}: ")
     key_list = formatter(stdout)
     print(key_list)
-    return key_list
+    return key_list, ""
 
 
 # Create a new volume
 def createVolume(vol):  # done
     command_formation = f"ozone sh volume create {vol}"
-    execute(command_formation)
+    err = execute(command_formation)[2]
+    return err.read().decode().strip()
 
 
 # Create a new bucket inside a volume
 def createBucket(vol, bucket):  # done
     command_formation = f"ozone sh bucket create {vol}/{bucket}/"
-    execute(command_formation)
+    err = execute(command_formation)[2]
+    return err.read().decode().strip()
 
 
 # Create a new key inside a bucket
@@ -137,16 +147,23 @@ def main():
         match user_response:
             case 1:
                 volume_name = input("Enter the name of the volume: ")
-                createVolume(volume_name)
-                print("Volume created successfully!!")
-                showVolumes()
+                err = createVolume(volume_name)
+                if err == "":
+                    print("Volume created successfully!!")
+                    showVolumes()
+                else:
+                    print(err)
             case 2:
                 showVolumes()
                 vol_name = input("Choose the volume: ")
                 bucket_name = input("Enter the bucket name: ")
-                createBucket(vol_name, bucket_name)
-                print("Bucket created successfully!!")
-                showBuckets(vol_name)
+                err = createBucket(vol_name, bucket_name)
+                if err == "":
+                    print("Bucket created successfully!!")
+                    showBuckets(vol_name)
+                else:
+                    print(err)
+
             case 3:
                 showVolumes()
                 vol_name = input("Choose the volume: ")
@@ -160,11 +177,19 @@ def main():
                 showVolumes()
             case 5:
                 vol_name = input("Enter the volume name: ")
-                showBuckets(vol_name)
+                err = showBuckets(vol_name)
+                if err == "":
+                    pass
+                else:
+                    print(err)
             case 6:
                 vol_name = input("Enter the volume name: ")
                 bucket_name = input("Enter the bucket name: ")
-                showKeys(vol_name, bucket_name)
+                key_list, err = showKeys(vol_name, bucket_name)
+                if err == "":
+                    pass
+                else:
+                    print(err)
             case 7:
                 num = int(input("Enter the number of keys(N) you want to add: "))
                 key_names = []
