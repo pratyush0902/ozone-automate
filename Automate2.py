@@ -129,7 +129,8 @@ def deleteAllKeys(vol, bucket, key_list):  # done
         deleteKey(vol, bucket, key)
 
 
-def volumeInfo(vol_name):
+# Get information about a particular volume
+def volumeInfo(vol_name):  # done
     command_formation = f"ozone sh volume info {vol_name}"
     stdin, stdout, stderr = c.exec_command(command_formation)
     time.sleep(5)
@@ -143,7 +144,8 @@ def volumeInfo(vol_name):
     return ""
 
 
-def bucketInfo(vol_name, bucket_name):
+# Get information about a particular bucket
+def bucketInfo(vol_name, bucket_name):  # done
     command_formation = f"ozone sh bucket info {vol_name}/{bucket_name}"
     stdin, stdout, stderr = c.exec_command(command_formation)
     time.sleep(5)
@@ -157,7 +159,8 @@ def bucketInfo(vol_name, bucket_name):
     return ""
 
 
-def keyInfo(vol_name, bucket_name, key_name):
+# Get information about a particular key
+def keyInfo(vol_name, bucket_name, key_name):  # done
     command_formation = f"ozone sh key info {vol_name}/{bucket_name}/{key_name}"
     stdin, stdout, stderr = c.exec_command(command_formation)
     time.sleep(5)
