@@ -129,12 +129,54 @@ def deleteAllKeys(vol, bucket, key_list):  # done
         deleteKey(vol, bucket, key)
 
 
+def volumeInfo(vol_name):
+    command_formation = f"ozone sh volume info {vol_name}"
+    stdin, stdout, stderr = c.exec_command(command_formation)
+    time.sleep(5)
+    error_string = stderr.read().decode().strip()
+    if error_string:
+        return error_string
+    print(f"{vol_name} volume information:  ")
+    out = stdout.read().decode().strip()
+    volume_info = json.loads(out)
+    print(volume_info)
+    return ""
+
+
+def bucketInfo(vol_name, bucket_name):
+    command_formation = f"ozone sh bucket info {vol_name}/{bucket_name}"
+    stdin, stdout, stderr = c.exec_command(command_formation)
+    time.sleep(5)
+    error_string = stderr.read().decode().strip()
+    if error_string:
+        return error_string
+    print(f"{bucket_name} bucket information:  ")
+    out = stdout.read().decode().strip()
+    bucket_info = json.loads(out)
+    print(bucket_info)
+    return ""
+
+
+def keyInfo(vol_name, bucket_name, key_name):
+    command_formation = f"ozone sh key info {vol_name}/{bucket_name}/{key_name}"
+    stdin, stdout, stderr = c.exec_command(command_formation)
+    time.sleep(5)
+    error_string = stderr.read().decode().strip()
+    if error_string:
+        return error_string
+    print(f"{key_name} key information: ")
+    out = stdout.read().decode().strip()
+    key_info = json.loads(out)
+    print(key_info)
+    return ""
+
+
 c = sshConnect()
 
 
 def main():
     user_response = 0
-    while user_response != 12:
+    while user_response != 15:
         print("\n\nWhat do you wanna do. \n"
               "1.Create a volume.\n"
               "2.Create a bucket inside a particular volume.\n"
@@ -308,6 +350,30 @@ def main():
                             print(err)
                     else:
                         print(err)
+            case 12:
+                vol_name = input("Enter the volume name: ")
+                err = volumeInfo(vol_name)
+                if err == "":
+                    pass
+                else:
+                    print(err)
+            case 13:
+                vol_name = input("Enter the volume name: ")
+                bucket_name = input("Enter the bucket name: ")
+                err = bucketInfo(vol_name, bucket_name)
+                if err == "":
+                    pass
+                else:
+                    print(err)
+            case 14:
+                vol_name = input("Enter the volume name: ")
+                bucket_name = input("Enter the bucket name: ")
+                key_name = input("Enter the key name: ")
+                err = keyInfo(vol_name, bucket_name, key_name)
+                if err == "":
+                    pass
+                else:
+                    print(err)
 
 
 if __name__ == "__main__":
