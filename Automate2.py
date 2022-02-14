@@ -80,8 +80,8 @@ def createVolume(vol):  # done
 
 
 # Create a new bucket inside a volume
-def createBucket(vol, bucket):  # done
-    command_formation = f"ozone sh bucket create {vol}/{bucket}/"
+def createBucket(vol, bucket, layout):  # done
+    command_formation = f"ozone sh bucket create {layout} {vol}/{bucket}/"
     err = execute(command_formation)[2]
     return err.read().decode().strip()
 
@@ -147,9 +147,12 @@ def main():
               "9.Delete a volume\n"
               "10.Delete a bucket from a volume\n"
               "11.Delete a key from a bucket\n"
-              "12.Exit\n"
+              "12.Info about a volume\n"
+              "13.Info about a bucket inside a volume\n"
+              "14.Info about a key inside a bucket\n"
+              "15.Exit\n"
               )
-        user_response = int(input("Enter your response[1-12]\n"))
+        user_response = int(input("Enter your response[1-15]\n"))
         match user_response:
             case 1:
                 volume_name = input("Enter the name of the volume: ")
@@ -163,13 +166,22 @@ def main():
                 showVolumes()
                 vol_name = input("Choose the volume: ")
                 bucket_name = input("Enter the bucket name: ")
-                err = createBucket(vol_name, bucket_name)
-                if err == "":
-                    print("Bucket created successfully!!")
-                    showBuckets(vol_name)
+                is_obs = input(
+                    "Do you want bucket layout to be FILE_SYSTEM_OPTIMIZED or OBJECT_STORE?\nSay FSO or OBS?: ")
+                if is_obs == "FSO" or is_obs == "OBS":
+                    if is_obs == "FSO":
+                        layout = "-l FILE_SYSTEM_OPTIMIZED"
+                    else:
+                        layout = "-l OBJECT_STORE"
+                    err = createBucket(vol_name, bucket_name, layout)
+                    if err == "" or "Creating Bucket" in err:
+                        print("Bucket created successfully!!")
+                        showBuckets(vol_name)
+                    else:
+                        # print("Error: ")
+                        print(err)
                 else:
-                    print(err)
-
+                    print("Wrong input!")
             case 3:
                 showVolumes()
                 vol_name = input("Choose the volume: ")
