@@ -173,7 +173,7 @@ def createFile(file_name, content):  # done
 
 
 # Listing files inside the /tmp/ directory Note: can be scaled to any directory, taking/tmp/ for my ref
-def listFiles():
+def listFiles():  # done
     command_formation = "find /tmp/ -maxdepth 1 -type f"
     stdin, stdout, stderr = c.exec_command(command_formation)
     time.sleep(5)
