@@ -33,6 +33,20 @@ def formatter(stdout):  # done
     return result
 
 
+# Info Formatter
+def infoFormatter(name, request_for, command_formation):  # done
+    stdin, stdout, stderr = c.exec_command(command_formation)
+    time.sleep(5)
+    error_string = stderr.read().decode().strip()
+    if error_string:
+        return error_string
+    print(f"{name} {request_for} information:  ")
+    out = stdout.read().decode().strip()
+    request_info = json.loads(out)
+    print(request_info)
+    return ""
+
+
 # List all the volumes present
 def showVolumes():  # done
     command_formation = "ozone sh volume list /"
@@ -87,17 +101,18 @@ def createBucket(vol, bucket, layout):  # done
 
 
 # Create a new key inside a bucket
-def createKey(vol, bucket, key):  # done
-    command_formation = f"ozone fs -touch o3fs://{bucket}.{vol}.ozone1/{key}"
+def createKey(vol, bucket, key, file_name):  # done
+    command_formation = f"ozone sh key put {vol}/{bucket}/{key} /tmp/{file_name}"
     err = execute(command_formation)[2]
     return err.read().decode().strip()
 
 
 # Create n keys at a time inside a bucket
-def createManyKeys(vol, bucket, key_names):  # done
+def createManyKeys(vol, bucket, key_names, default_copy_file):  # done
     for key in key_names:
-        err_catch = createKey(vol, bucket, key)
-        if err_catch != "":
+        err_catch = createKey(vol, bucket, key, default_copy_file)
+        print(f"Key {key} done....")
+        if err_catch != "" and "WARN" not in err_catch:
             return err_catch
     return ""
 
@@ -132,46 +147,41 @@ def deleteAllKeys(vol, bucket, key_list):  # done
 # Get information about a particular volume
 def volumeInfo(vol_name):  # done
     command_formation = f"ozone sh volume info {vol_name}"
-    stdin, stdout, stderr = c.exec_command(command_formation)
-    time.sleep(5)
-    error_string = stderr.read().decode().strip()
-    if error_string:
-        return error_string
-    print(f"{vol_name} volume information:  ")
-    out = stdout.read().decode().strip()
-    volume_info = json.loads(out)
-    print(volume_info)
-    return ""
+    err_string = infoFormatter(vol_name, "volume", command_formation)
+    return err_string
 
 
 # Get information about a particular bucket
 def bucketInfo(vol_name, bucket_name):  # done
     command_formation = f"ozone sh bucket info {vol_name}/{bucket_name}"
-    stdin, stdout, stderr = c.exec_command(command_formation)
-    time.sleep(5)
-    error_string = stderr.read().decode().strip()
-    if error_string:
-        return error_string
-    print(f"{bucket_name} bucket information:  ")
-    out = stdout.read().decode().strip()
-    bucket_info = json.loads(out)
-    print(bucket_info)
-    return ""
+    err_string = infoFormatter(bucket_name, "bucket", command_formation)
+    return err_string
 
 
 # Get information about a particular key
 def keyInfo(vol_name, bucket_name, key_name):  # done
     command_formation = f"ozone sh key info {vol_name}/{bucket_name}/{key_name}"
+    err_string = infoFormatter(key_name, "key", command_formation)
+    return err_string
+
+
+# Creating/Overwriting a file inside /tmp/
+def createFile(file_name, content):  # done
+    command_formation = f"echo '{content}' >> /tmp/{file_name}"
+    err = c.exec_command(command_formation)[2]
+    return err.read().decode().strip()
+
+
+# Listing files inside the /tmp/ directory Note: can be scaled to any directory, taking/tmp/ for my ref
+def listFiles():
+    command_formation = "find /tmp/ -maxdepth 1 -type f"
     stdin, stdout, stderr = c.exec_command(command_formation)
     time.sleep(5)
-    error_string = stderr.read().decode().strip()
-    if error_string:
-        return error_string
-    print(f"{key_name} key information: ")
     out = stdout.read().decode().strip()
-    key_info = json.loads(out)
-    print(key_info)
-    return ""
+    file_list = out.split("\n")
+    print("Files inside /tmp/ are: ")
+    print(out)
+    return file_list
 
 
 c = sshConnect()
@@ -179,7 +189,7 @@ c = sshConnect()
 
 def main():
     user_response = 0
-    while user_response != 15:
+    while user_response != 17:
         print("\n\nWhat do you wanna do. \n"
               "1.Create a volume.\n"
               "2.Create a bucket inside a particular volume.\n"
@@ -195,9 +205,11 @@ def main():
               "12.Info about a volume\n"
               "13.Info about a bucket inside a volume\n"
               "14.Info about a key inside a bucket\n"
-              "15.Exit\n"
+              "15.Create a file inside /tmp/\n"
+              "16.List files under /tmp/ directory\n"
+              "17.Exit\n"
               )
-        user_response = int(input("Enter your response[1-15]\n"))
+        user_response = int(input("Enter your response[1-17]\n"))
         match user_response:
             case 1:
                 volume_name = input("Enter the name of the volume: ")
@@ -237,18 +249,32 @@ def main():
                 else:
                     bucket_name = input("Choose the bucket: ")
                     key_name = input("Enter the key name: ")
-                    err = createKey(vol_name, bucket_name, key_name)
-                    if err == "":
-                        print("Key created successfully.")
-                        showKeys(vol_name, bucket_name)
+                    print("\nAvailable files to copy: ")
+                    listFiles()  # can return a list of all the files also
+                    create_new = input("Enter yes if you want to create a new file, \nand No if you want to chose "
+                                       "from above list.")
+                    if create_new == "No" or create_new == "Yes":
+                        if create_new == "No":
+                            file_name = input("Chose the file name from above: ")
+                        else:
+                            file_name = input("Enter the file name: ")
+                            content = input("Enter the content to insert into the file: ")
+                            createFile(file_name, content)
+                        err = createKey(vol_name, bucket_name, key_name, file_name)
+                        if err == "" or "WARN" in err:
+                            print("Key created successfully.")
+                            showKeys(vol_name, bucket_name)
+                        else:
+                            # print(type(err))
+                            # NOT APPLICABLE NOW, MOVED FROM ozone fs to ozone sh
+                            # The error output will have warning lines as well as the actual error message
+                            # Last line is the actual error message, it is in the form " touch: <error message> "
+                            # so, splitlines()[-1] is for getting the last line and partition is for extracting the
+                            # real error message without the "touch"
+                            print(err)
+                            # print(err.splitlines()[-1].partition(": ")[2])
                     else:
-                        # print(type(err))
-                        # The error output will have warning lines as well as the actual error message
-                        # Last line is the actual error message, it is in the form " touch: <error message> "
-                        # so, splitlines()[-1] is for getting the last line and partition is for extracting the
-                        # real error message without the "touch"
-                        print(err.splitlines()[-1].partition(": ")[2])
-
+                        print("Bad choice!")
             case 4:
                 showVolumes()
             case 5:
@@ -280,19 +306,22 @@ def main():
                     for i in range(num):
                         key_name = input(f"Enter the name of {i + 1} key: ")
                         key_names.append(key_name)
-
+                    print("Keys to put: ", key_names)
                     print("Putting keys..Please wait..")
-                    err = createManyKeys(vol_name, bucket_name, key_names)
+                    # Default file for now that is getting copied from temp: userdata-file.sh
+                    err = createManyKeys(vol_name, bucket_name, key_names, "userdata-file.sh")
                     if err == "":
                         print("All the keys created successfully!")
                         showKeys(vol_name, bucket_name)
                     else:
                         # print(type(err))
+                        # NOT APPLICABLE NOW, MOVED FROM ozone fs to ozone sh
                         # The error output will have warning lines as well as the actual error message
                         # Last line is the actual error message, it is in the form " touch: <error message> "
                         # so, splitlines()[-1] is for getting the last line and partition is for extracting the
                         # real error message without the "touch"
-                        print(err.splitlines()[-1].partition(": ")[2])
+                        print(err)
+                        # print(err.splitlines()[-1].partition(": ")[2])
 
             case 8:
                 showVolumes()
@@ -377,6 +406,17 @@ def main():
                     pass
                 else:
                     print(err)
+            case 15:
+                file_name = input("Enter the file name: ")
+                content = input("Enter the content to insert into the file: ")
+                err = createFile(file_name, content)
+                if err == "":
+                    print("File created successfully!")
+                    listFiles()
+                else:
+                    print(err)
+            case 16:
+                listFiles()
 
 
 if __name__ == "__main__":
